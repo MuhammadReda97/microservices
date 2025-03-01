@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 	"os"
+	"search-service/cars"
 )
 
 type SearchService struct {
@@ -15,6 +16,7 @@ type SearchService struct {
 }
 
 func main() {
+	cars.Test()
 	// es password is elastic,oauFcQ-WiwCakfbv*id1
 	println("started...")
 	// Initialize Logger
