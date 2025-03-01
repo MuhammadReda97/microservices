@@ -29,7 +29,7 @@ func main() {
 			"http://localhost:9200",
 		},
 		Username: "elastic",
-		Password: "oauFcQ-WiwCakfbv*id1",
+		Password: "=AR4wCe6XEO0lPWq-fsb",
 	}
 
 	es, err := elasticsearch.NewClient(cfg)
