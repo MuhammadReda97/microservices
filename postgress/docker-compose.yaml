@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  postgres:
+    build: .
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: afghany
+      POSTGRES_PASSWORD: afghany
+      POSTGRES_DB: afghany_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:
+    driver: local
