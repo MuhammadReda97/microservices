@@ -2,12 +2,13 @@ package cars
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
-	"os"
 )
 
 type Car struct {
@@ -20,9 +21,14 @@ type Car struct {
 	TireSize int    `json:"tire_size"`
 	Weight   int    `json:"weight"`
 	BodyType string `json:"body_type"`
+	Price    int    `json:"price"`
 }
 
 var db *gorm.DB
+
+func Testing() {
+	log.Println("testing")
+}
 
 func Test() {
 	if err := godotenv.Load(); err != nil {

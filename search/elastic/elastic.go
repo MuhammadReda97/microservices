@@ -1,12 +1,10 @@
-package main
+package elastic
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"os"
-	"search-service/cars"
-	"search-service/elastic"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gofiber/fiber/v2"
@@ -17,68 +15,30 @@ type SearchService struct {
 	ESClient *elasticsearch.Client
 }
 
-// func main() {
-// 	cars.Testing()
-// 	elastic.Service()
-// 	// es password is elastic,oauFcQ-WiwCakfbv*id1
-// 	println("started...")
-// 	// Initialize Logger
-// 	logrus.SetFormatter(&logrus.JSONFormatter{})
-// 	logrus.SetOutput(os.Stdout)
+func Service() *SearchService {
+	logrus.Info("host" + os.Getenv("ELASTIC_HOST"))
+	logrus.Info("user" + os.Getenv("ELASTIC_USER"))
+	logrus.Info("password" + os.Getenv("ELASTIC_PASSWORD"))
+	cfg := elasticsearch.Config{
+		Addresses: []string{
+			os.Getenv("ELASTIC_HOST"),
+		},
+		Username: os.Getenv("ELASTIC_USER"),
+		Password: os.Getenv("ELASTIC_PASSWORD"),
+	}
 
-// 	// Initialize Elasticsearch
-// 	cfg := elasticsearch.Config{
-// 		Addresses: []string{
-// 			"http://localhost:9200",
-// 		},
-// 		Username: "elastic",
-// 		Password: "=AR4wCe6XEO0lPWq-fsb",
-// 	}
+	es, err := elasticsearch.NewClient(cfg)
+	if err != nil {
+		logrus.Fatal("Failed to initialize Elasticsearch: ", err)
+	}
 
-// 	es, err := elasticsearch.NewClient(cfg)
-// 	if err != nil {
-// 		logrus.Fatal("Failed to initialize Elasticsearch: ", err)
-// 	}
-
-// 	service := &SearchService{
-// 		ESClient: es,
-// 	}
-
-// 	// Initialize Fiber app
-// 	app := fiber.New()
-
-// 	app.Get("/search", service.SearchProducts)
-// 	//app.Post("/search/index", service.IndexPartner)
-// 	// app.Put("/search/index/:id", service.UpdateProductIndex)
-// 	// app.Delete("/search/index/:id", service.DeleteProductIndex)
-
-// 	// Start the server
-// 	logrus.Info("Starting Search Service on port 8081")
-// 	if err := app.Listen(":8081"); err != nil {
-// 		logrus.Fatal("Failed to start server: ", err)
-// 	}
-// }
-
-func main() {
-	cars.Testing()
-	// es password is elastic,oauFcQ-WiwCakfbv*id1
-	println("started...")
-	// Initialize Logger
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-	// Initialize Fiber app
-	app := fiber.New()
-	service := elastic.Service()
-	app.Get("/search", service.SearchProducts)
-	// Start the server
-	logrus.Info("Starting Search Service on port 8081")
-	if err := app.Listen(":8081"); err != nil {
-		logrus.Fatal("Failed to start server: ", err)
+	return &SearchService{
+		ESClient: es,
 	}
 }
 
 func (s *SearchService) SearchProducts(c *fiber.Ctx) error {
-	logrus.Info("here")
+	logrus.Info("SearchProducts called")
 	var queryParams map[string]interface{}
 	if err := c.BodyParser(&queryParams); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request payload"})
@@ -176,4 +136,39 @@ func formatElasticsearchResponse(esResponse map[string]interface{}) []map[string
 	}
 
 	return formattedResults
+}
+
+func (s *SearchService) UpdateProductIndex(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var updateData map[string]interface{}
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request payload"})
+	}
+
+	updateDoc := map[string]interface{}{"doc": updateData}
+	data, err := json.Marshal(updateDoc)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Internal Server Error"})
+	}
+
+	res, err := s.ESClient.Update("products", id, bytes.NewReader(data))
+	if err != nil {
+		logrus.WithError(err).Error("Error updating document")
+		return c.Status(500).JSON(fiber.Map{"error": "Internal Server Error"})
+	}
+	defer res.Body.Close()
+
+	return c.JSON(fiber.Map{"message": "Product index updated successfully"})
+}
+
+func (s *SearchService) DeleteProductIndex(c *fiber.Ctx) error {
+	id := c.Params("id")
+	res, err := s.ESClient.Delete("products", id)
+	if err != nil {
+		logrus.WithError(err).Error("Error deleting document")
+		return c.Status(500).JSON(fiber.Map{"error": "Internal Server Error"})
+	}
+	defer res.Body.Close()
+
+	return c.JSON(fiber.Map{"message": "Product index deleted successfully"})
 }
