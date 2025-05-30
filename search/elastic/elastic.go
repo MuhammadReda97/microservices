@@ -8,6 +8,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,15 +17,27 @@ type SearchService struct {
 }
 
 func Service() *SearchService {
-	logrus.Info("host" + os.Getenv("ELASTIC_HOST"))
-	logrus.Info("user" + os.Getenv("ELASTIC_USER"))
-	logrus.Info("password" + os.Getenv("ELASTIC_PASSWORD"))
+	// Load the .env file
+	if err := godotenv.Load(); err != nil {
+		logrus.Warning("Error loading .env file: ", err)
+	}
+
+	elasticHost := os.Getenv("ELASTIC_HOST")
+	elasticUser := os.Getenv("ELASTIC_USER")
+	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
+
+	// Validate required environment variables
+	if elasticHost == "" || elasticUser == "" || elasticPassword == "" {
+		logrus.Fatal("Required environment variables are not set. Please check your .env file")
+	}
+
+	logrus.Info("Elasticsearch Host: " + elasticHost)
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			os.Getenv("ELASTIC_HOST"),
+			elasticHost,
 		},
-		Username: os.Getenv("ELASTIC_USER"),
-		Password: os.Getenv("ELASTIC_PASSWORD"),
+		Username: elasticUser,
+		Password: elasticPassword,
 	}
 
 	es, err := elasticsearch.NewClient(cfg)
