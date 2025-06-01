@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_USER: afghany
       POSTGRES_PASSWORD: afghany
-      POSTGRES_DB: afghany_db
+      POSTGRES_DB: search_db
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

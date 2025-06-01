@@ -2,8 +2,8 @@ FROM postgres:latest
 
 # Set environment variables
 ENV POSTGRES_USER=afghany
-ENV POSTGRES_PASSWORD=mypassword
-ENV POSTGRES_DB=mydatabase
+ENV POSTGRES_PASSWORD=afghany
+ENV POSTGRES_DB=search_db
 
 # Create the directory inside the container
 RUN mkdir -p /usr/share/postgres/
